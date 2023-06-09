@@ -83,6 +83,7 @@ class MuonLab_III:
         self.hit_rate_ch1 = []
         self.hit_rate_ch2 = []
         self.delta_times = []
+        self.datapoint_times_delta_times = []
 
     def get_lifetimes(self, s=0, m=0, h=0, print_lifetime=False):
         """
@@ -306,6 +307,7 @@ class MuonLab_III:
         dT_max = timedelta(seconds=s, minutes=m, hours=h)
         dT = timedelta(seconds=0.001)
         delta_times = []
+        datapoint_times_delta_times = []
 
         print("")
         print(
@@ -335,6 +337,7 @@ class MuonLab_III:
                         if byte_2 == b"\xB7":
                             value_time *= -1
                         delta_times.append(value_time)
+                        datapoint_times_delta_times(dT)
 
                         self.save_data(self.filename)
 
@@ -343,6 +346,7 @@ class MuonLab_III:
 
         # add to total
         self.delta_times.extend(delta_times)
+        self.datapoint_times_delta_times.extend(datapoint_times_delta_times)
         print("Finished delta time measurement")
         print("")
 
@@ -380,6 +384,9 @@ class MuonLab_III:
             self.hit_rate_ch2.append("None measured")
         if len(self.delta_times) == 0:
             self.delta_times.append("None measured")
+        if len(self.datapoint_times_delta_times) == 0:
+            self.datapoint_times_delta_times.append("None measured")
+            
 
         # make dataframes of all data
         df_coincidence = pd.DataFrame({"Total coincidences": [self.coincidences]})
@@ -387,9 +394,10 @@ class MuonLab_III:
         df_hits_ch1 = pd.DataFrame({"Hits channel 1": self.hit_rate_ch1})
         df_hits_ch2 = pd.DataFrame({"Hits channel 2": self.hit_rate_ch2})
         df_delta_time = pd.DataFrame({"Delta times": self.delta_times})
+        df_datapoint_times_delta_times = pd.DataFrame({"Delta times corresponding measurement time": self.datapoint_times_delta_times})
 
         df_total = pd.concat(
-            [df_hits_ch1, df_hits_ch2, df_lifetime, df_delta_time, df_coincidence],
+            [df_hits_ch1, df_hits_ch2, df_lifetime, df_delta_time, df_datapoint_times_delta_times, df_coincidence],
             axis=1,
         )
 
