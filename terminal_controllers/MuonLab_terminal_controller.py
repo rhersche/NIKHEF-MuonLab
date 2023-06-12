@@ -259,8 +259,8 @@ class MuonLab_III:
                         hit_ch2 = int.from_bytes(bytes_ch2, byteorder="big")
                         bytes_ch1 = self.device.read(2)
                         hit_ch1 = int.from_bytes(bytes_ch1, byteorder="big")
-                        self.hits_ch1.append(hit_ch1)
-                        self.hits_ch2.append(hit_ch2)
+                        self.hit_rate_ch1.append(hit_ch1)
+                        self.hit_rate_ch2.append(hit_ch2)
 
                         self.save_data(self.filename)
 
