@@ -40,21 +40,21 @@ class MuonLab_III:
 
         # make bytes from terminal commands for initial settings. see "Message Protocol MuonLab III.pdf" on wiki 
         if 300 <= args.voltage <= 1700:
-        	voltage_value = int(((args.voltage-300)/1400)*255) # HV = 300+((nBit/255)*1400); x6A=d106 > 800V; Default = 1673V = 250bit
+            voltage_value = int(((args.voltage-300)/1400)*255) # HV = 300+((nBit/255)*1400); x6A=d106 > 800V; Default = 1673V = 250bit
             if voltage_value > 255: 
-        		voltage_value = 255 
+                voltage_value = 255 
         else:
-        	voltage_value = 0
-        	raise OSError(
+            voltage_value = 0
+            raise OSError(
                 "Give voltage value between 300V and 1700V")   
         voltage_pmt1 = b"\x99" + b"\x14" + bytes([voltage_value]) + b"\x66"
         voltage_pmt2 = b"\x99" + b"\x15" + bytes([voltage_value]) + b"\x66"
         
         if args.threshold <= 380:
-        	threshold_value = int((args.threshold/380)*255) # TV = (nBit/255)*380mV; x22=d34 > 50mV; Default = 151mV = 101bit 
+            threshold_value = int((args.threshold/380)*255) # TV = (nBit/255)*380mV; x22=d34 > 50mV; Default = 151mV = 101bit 
         else:
-        	threshold_value = 0
-        	raise OSError(
+            threshold_value = 0
+            raise OSError(
                 "Give threshold value between 0mV and 380mV") 
         threshold_pmt1 = b"\x99" + b"\x16" + bytes([threshold_value]) + b"\x66"
         threshold_pmt2 = b"\x99" + b"\x17" + bytes([threshold_value]) + b"\x66"
