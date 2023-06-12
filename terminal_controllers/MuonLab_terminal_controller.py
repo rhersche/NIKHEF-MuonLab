@@ -271,7 +271,7 @@ class MuonLab_III:
         print("Finished hit rate collection.")
         print("")
 
-        return self.hits_ch1, self.hits_ch2
+        return self.hit_rate_ch1, self.hit_rate_ch2
 
     def get_delta_time(self, s=0, m=0, h=0, print_time=False):
         """ 
