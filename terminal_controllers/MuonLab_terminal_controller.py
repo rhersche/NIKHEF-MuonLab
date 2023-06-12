@@ -41,7 +41,7 @@ class MuonLab_III:
         # make bytes from terminal commands for initial settings. see "Message Protocol MuonLab III.pdf" on wiki 
         if 300 <= args.voltage <= 1700:
         	voltage_value = int(((args.voltage-300)/1400)*255) # HV = 300+((nBit/255)*1400); x6A=d106 > 800V; Default = 1673V = 250bit
-        	if voltage_value > 255: 
+            if voltage_value > 255: 
         		voltage_value = 255 
         else:
         	voltage_value = 0
@@ -107,7 +107,6 @@ class MuonLab_III:
         start_time = datetime.now()
         dT_max = timedelta(seconds=s, minutes=m, hours=h)
         dT = timedelta(seconds=0.001)
-        lifetimes = []
 
         print("")
         print(
@@ -136,7 +135,7 @@ class MuonLab_III:
                         int_value = int.from_bytes(bytes_value, byteorder="big")
                         # step size = 10 ns
                         time_value = int_value * 10
-                        lifetimes.append(time_value)
+                        self.lifetimes.append(time_value)
 
                         self.save_data(self.filename)
 
@@ -144,11 +143,10 @@ class MuonLab_III:
                             print("     measured lifetime: {} ns".format(time_value))
 
         # add to total
-        self.lifetimes.extend(lifetimes)
         print("Finished lifetime measurement.")
         print("")
 
-        return lifetimes
+        return self.lifetimes
 
     def get_coincidences(self, s=0, m=0, h=0, print_coincidence=False):
         """
@@ -172,7 +170,6 @@ class MuonLab_III:
         start_time = datetime.now()
         dT_max = timedelta(seconds=s, minutes=m, hours=h)
         dT = timedelta(seconds=0.001)
-        coincidences = 0
 
         print("")
         print(
@@ -196,7 +193,7 @@ class MuonLab_III:
                     byte_2 = self.device.read(1)
                     if byte_2 == b"\x55":
 
-                        coincidences += 1
+                        self.coincidences += 1
                         if print_coincidence:
 
                             self.save_data(self.filename)
@@ -208,11 +205,10 @@ class MuonLab_III:
                             )
 
         # add to total
-        self.coincidences += coincidences
         print("Finished coincidence measurement.")
         print("")
 
-        return coincidences
+        return self.coincidences
 
     def get_hit_rates(self, s=0, m=0, h=0, print_hits=False):
         """
@@ -235,8 +231,6 @@ class MuonLab_III:
         start_time = datetime.now()
         dT_max = timedelta(seconds=s, minutes=m, hours=h)
         dT = timedelta(seconds=0.001)
-        hits_ch1 = []
-        hits_ch2 = []
         self.a = "xFA" 
 
         print("")
@@ -265,8 +259,8 @@ class MuonLab_III:
                         hit_ch2 = int.from_bytes(bytes_ch2, byteorder="big")
                         bytes_ch1 = self.device.read(2)
                         hit_ch1 = int.from_bytes(bytes_ch1, byteorder="big")
-                        hits_ch1.append(hit_ch1)
-                        hits_ch2.append(hit_ch2)
+                        self.hits_ch1.append(hit_ch1)
+                        self.hits_ch2.append(hit_ch2)
 
                         self.save_data(self.filename)
 
@@ -274,12 +268,10 @@ class MuonLab_III:
                             print("     ch1: {} ch2: {}".format(hit_ch1, hit_ch2))
 
         # add to total
-        self.hit_rate_ch1.extend(hits_ch1)
-        self.hit_rate_ch2.extend(hits_ch2)
         print("Finished hit rate collection.")
         print("")
 
-        return hits_ch1, hits_ch2
+        return self.hits_ch1, self.hits_ch2
 
     def get_delta_time(self, s=0, m=0, h=0, print_time=False):
         """ 
@@ -306,8 +298,6 @@ class MuonLab_III:
         start_time = datetime.now()
         dT_max = timedelta(seconds=s, minutes=m, hours=h)
         dT = timedelta(seconds=0.001)
-        delta_times = []
-        datapoint_times_delta_times = []
 
         print("")
         print(
@@ -336,8 +326,8 @@ class MuonLab_III:
                         # if identifier == b\'xB7' detector 2 was hit first so time should be reversed
                         if byte_2 == b"\xB7":
                             value_time *= -1
-                        delta_times.append(value_time)
-                        datapoint_times_delta_times(dT)
+                        self.delta_times.append(value_time)
+                        self.datapoint_times_delta_times.append(dT.total_seconds())
 
                         self.save_data(self.filename)
 
@@ -345,12 +335,10 @@ class MuonLab_III:
                             print("     measured delta time: {}".format(value_time))
 
         # add to total
-        self.delta_times.extend(delta_times)
-        self.datapoint_times_delta_times.extend(datapoint_times_delta_times)
         print("Finished delta time measurement")
         print("")
 
-        return delta_times
+        return self.delta_times
 
     def get_signal(self):
         """
