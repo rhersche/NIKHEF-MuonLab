@@ -28,8 +28,8 @@ class MuonLab_III:
             self.device = None
             ports = serial.tools.list_ports.comports()
             available_ports = []
-            for port, _, _ in sorted(ports):
-                available_ports.append(port)
+            for av_port, _, _ in sorted(ports):
+                available_ports.append(av_port)
 
             raise Exception(
                 "Device port {} not found. Available ports: {}. If working with linux, please ensure rwx permissions are set correctly by running sudo chmod 777 {}".format(port, available_ports, port)
@@ -75,7 +75,14 @@ class MuonLab_III:
         self.device.write(
             b"\x99\x10\x55\x66"
         )  # Set offset ADC CH1 offset = (nBit/255)*380mV x55=d85 = 126 mV
-        self.device.write(b"\x99\x20\x08\x66")  # Enable USB for data reception
+        
+        self.device.write(b"\x99\x20\x08\x66"
+        )  # Enable USB for data reception
+        
+        self.device.write(
+            b"\x99\x1A\xFF\x66"
+        ) # Maximal pre-trigger setting
+
 
         # create lists to save all measurement data
         self.lifetimes = []
@@ -194,7 +201,7 @@ class MuonLab_III:
                     if byte_2 == b"\x55":
 
                         self.coincidences += 1
-			self.save_data(self.filename)
+                        self.save_data(self.filename)
                         if print_coincidence:
 
                             
@@ -351,12 +358,25 @@ class MuonLab_III:
         """        
         #### TODO: make signal list and plot available from terminal ####
         #set device to measure coincidences
-        self.device.write(b"\x99\x20\x0A\x66")
+        self.device.write(b"\x99\x20\x0C\x66")
+        unfound = True
+        while unfound:
+            if self.device.inWaiting() > 65000:
+                self.device.flushInput()
+            else:
+                value = self.device.read(1)
+                if value == b"\x99":
+                    # check for signal message
+                    byte_2 = self.device.read(1)
+                    if byte_2 == b"\xC5":
+
+                        signal = list(self.device.read(2000))
+                        unfound = False
         
-        data_bytes = self.device.read(100) # get first 100 signals from photomultiplier 1
-        input_signal = list(data_bytes) # signal values are seperated by 5 ns; total signal time = 2 microseconds
+        # get last 2000 signals from photomultiplier 1
+        # signal values are seperated by 5 ns; total signal time = 10 microseconds
         
-        return input_signal
+        return signal
 	
     def save_data(self, name="unnamed"):
         """
@@ -460,7 +480,7 @@ if __name__ == "__main__":
     	help="set threshold value of Channel 1 and 2",
     )
     args = parser.parse_args()
-    experiments = ["lifetimes", "coincidences", "hits", "delta_times"]
+    experiments = ["lifetimes", "coincidences", "hits", "delta_times", "signal"]
 
     if args.experiment in experiments:
         ml = MuonLab_III(port=args.port, filename=args.filename)
@@ -481,6 +501,8 @@ if __name__ == "__main__":
             hits = True
         if args.experiment == "delta_times":
             delta_times = True
+        if args.experiment == "signal":
+            signal = True    
 
         if lifetimes:
             lifetimes = ml.get_lifetimes(
@@ -529,8 +551,21 @@ if __name__ == "__main__":
         ml.save_data(args.filename)
         print("")
 
+        if signal:
+            threshold_value = int((args.threshold/380)*255) # TV = (nBit/255)*380mV; x22=d34 > 50mV; Default = 151mV = 101bit 
+            used_threshold_voltage = (threshold_value/255)*380
+            used_offset_voltage = 126
+
+            signal = np.array(ml.get_signal())
+            X = np.linspace(0, 10000, 2000)
+            plt.axhline(-used_threshold_voltage, label='threshold', c='orange')
+            plt.plot(X[:100], -8*signal[:100]+used_offset_voltage-78, label='signal')
+            plt.legend(loc='best')
+            plt.xlabel('Time $t$ in ns')
+            plt.ylabel('Photomultiplier signal (mV)')
+            plt.show()
+
     else:
         print(
             "\nThe specified experiment was not recognised. execute MuonLab_terminal_controller.py -h for available options.\n"
         )
-
