@@ -163,7 +163,7 @@ class MuonLab_III:
 
         """
         # set device to measure coincidences
-        self.device.write(b"\x99\x20\x09\x66")
+        self.device.write(b"\x99\x20\x18\x66")
 
         if h == 0 and m == 0 and s == 0:
             s = 5
@@ -194,13 +194,14 @@ class MuonLab_III:
                     if byte_2 == b"\x55":
 
                         self.coincidences += 1
+			self.save_data(self.filename)
                         if print_coincidence:
 
-                            self.save_data(self.filename)
+                            
 
                             print(
                                 "     measured coincidence. total: {}".format(
-                                    coincidences
+                                    self.coincidences
                                 )
                             )
 
